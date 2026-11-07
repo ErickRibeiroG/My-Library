@@ -217,7 +217,7 @@
 
                             <div class="botoes-livro">
 
-                                <form method="POST">
+                                <form method="POST" title="Quero ler">
                                     {% csrf_token %}
                                     <input type="hidden" name="titulo" value="{{ livro.titulo }}">
                                     <input type="hidden" name="categoria" value="{{ livro.categoria }}">
@@ -233,7 +233,7 @@
 
                                 </form>
 
-                                <form method="POST">
+                                <form method="POST" title="Comprado">
                                     {% csrf_token %}
                                     <input type="hidden" name="titulo" value="{{ livro.titulo }}">
                                     <input type="hidden" name="categoria" value="{{ livro.categoria }}">
@@ -249,7 +249,7 @@
 
                                 </form>
 
-                                <form method="POST">
+                                <form method="POST" title="Lido">
                                     {% csrf_token %}
                                     <input type="hidden" name="titulo" value="{{ livro.titulo }}">
                                     <input type="hidden" name="categoria" value="{{ livro.categoria }}">
