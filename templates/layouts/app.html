@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load livros %}
+
+{% block body_class %}app{% endblock %}
+
+{% block body %}
+{% with rota=request.resolver_match.url_name status=request.GET.status %}
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar__topo">
+        <a href="{% url 'core:home' %}" class="logo">
+            <span class="logo__icone"><i class="fa-solid fa-book-open"></i></span>
+            <span class="logo__texto">My Library</span>
+        </a>
+        <button type="button" class="botao-icone sidebar__fechar" data-sidebar-fechar aria-label="Fechar menu">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <nav class="sidebar__nav" aria-label="Navegação principal">
+        <p class="nav__titulo">Biblioteca</p>
+        <ul class="nav__lista">
+            <li>
+                <a href="{% url 'core:home' %}" class="nav__link{% if rota == 'home' %} ativo{% endif %}">
+                    <i class="fa-solid fa-house"></i><span>Início</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'core:biblioteca' %}" class="nav__link{% if rota == 'biblioteca' and not status %} ativo{% endif %}">
+                    <i class="fa-solid fa-layer-group"></i><span>Minha estante</span>
+                    <span class="nav__contador">{{ contagem_estantes.total }}</span>
+                </a>
+            </li>
+        </ul>
+
+        <p class="nav__titulo">Estantes</p>
+        <ul class="nav__lista">
+            {% status_disponiveis as lista_status %}
+            {% for valor, rotulo, icone in lista_status %}
+            <li>
+                <a href="{% url 'core:biblioteca' %}?status={{ valor }}" class="nav__link nav__link--{{ valor }}{% if rota == 'biblioteca' and status == valor %} ativo{% endif %}">
+                    <i class="{{ icone }}"></i><span>{{ rotulo }}</span>
+                    <span class="nav__contador">{{ contagem_estantes|get_item:valor }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <p class="nav__titulo">Descobrir</p>
+        <ul class="nav__lista">
+            <li>
+                <a href="{% url 'core:buscar' %}" class="nav__link{% if rota == 'buscar' %} ativo{% endif %}">
+                    <i class="fa-solid fa-magnifying-glass"></i><span>Buscar livros</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="sidebar__rodape">
+        <a href="{% url 'account:perfil' %}" class="perfil{% if rota == 'perfil' %} ativo{% endif %}" title="Meu perfil">
+            <span class="avatar">{{ user|iniciais }}</span>
+            <span class="perfil__info">
+                <span class="perfil__nome">{{ user.get_full_name|default:user.get_username }}</span>
+                <span class="perfil__email">{{ user.email }}</span>
+            </span>
+        </a>
+        <form method="post" action="{% url 'account:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="botao-icone" title="Sair" aria-label="Sair">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+        </form>
+    </div>
+</aside>
+<div class="sidebar-fundo" data-sidebar-fechar></div>
+{% endwith %}
+
+<div class="principal">
+    <header class="topo">
+        <button type="button" class="botao-icone topo__menu" data-sidebar-abrir aria-label="Abrir menu" aria-controls="sidebar">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="topo__conteudo">
+            {% block topo %}
+            <h1 class="topo__titulo">{% block titulo_pagina %}{% endblock %}</h1>
+            {% endblock %}
+        </div>
+        <div class="topo__acoes">{% block acoes_topo %}{% endblock %}</div>
+    </header>
+
+    <main class="conteudo">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

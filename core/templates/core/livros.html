@@ -1,206 +1,80 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
+{% extends 'layouts/app.html' %}
+{% load livros %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuminaBooks - Buscar Livros</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'core/css/livros.css' %}">
-</head>
+{% block title %}{% if status_atual %}{{ status_atual|rotulo_status }}{% else %}Minha estante{% endif %}{% endblock %}
 
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="/" class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-book"></i>
-                </div>
-                <span class="logo-text">My Library</span>
-            </a>
+{% block topo %}
+<p class="topo__sobretitulo">Biblioteca</p>
+<h1 class="topo__titulo">{% if status_atual %}{{ status_atual|rotulo_status }}{% else %}Minha estante{% endif %}</h1>
+{% endblock %}
+
+{% block acoes_topo %}
+<a href="{% url 'core:buscar' %}" class="botao botao--primario">
+    <i class="fa-solid fa-plus"></i><span>Adicionar livro</span>
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="barra-filtros">
+    <nav class="abas" aria-label="Filtrar por estante">
+        <a href="{% url 'core:biblioteca' %}{% if busca_atual %}?q={{ busca_atual|urlencode }}{% endif %}" class="aba{% if not status_atual %} ativo{% endif %}">
+            Todos <span class="aba__contador">{{ contagem_estantes.total }}</span>
+        </a>
+        {% status_disponiveis as lista_status %}
+        {% for valor, rotulo, icone in lista_status %}
+        <a href="{% querystring status=valor pagina=None %}" class="aba aba--{{ valor }}{% if status_atual == valor %} ativo{% endif %}">
+            <i class="{{ icone }}"></i> {{ rotulo }} <span class="aba__contador">{{ contagem_estantes|get_item:valor }}</span>
+        </a>
+        {% endfor %}
+    </nav>
+
+    <form method="get" class="filtros">
+        {% if status_atual %}<input type="hidden" name="status" value="{{ status_atual }}">{% endif %}
+        <div class="busca busca--compacta">
+            <i class="fa-solid fa-magnifying-glass busca__icone"></i>
+            <input type="search" name="q" value="{{ busca_atual }}" placeholder="Filtrar por título, autor ou categoria" aria-label="Filtrar livros">
         </div>
-
-        <nav class="sidebar-nav">
-
-            <div class="nav-section">
-                <h3 class="nav-section-title">COLEÇÕES</h3>
-                <ul class="nav-list">
-                    <li class="nav-item active">
-                        <a href="{% url 'home' %}" class="nav-link">
-                            <i class="fas fa-book"></i>
-                            <span>Livros</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h3 class="nav-section-title">DESCOBRIR</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="{% url 'buscar' %}" class="nav-link">
-                            <i class="fas fa-search"></i>
-                            <span>Buscar</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h3 class="nav-section-title">CONTA</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Configurações</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-
-        <div class="sidebar-footer">
-            <div class="user-profile">
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="user-info">
-                    <div class="user-name">{{ user.first_name}}</div>
-                    <div class="user-role"></div>
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Header -->
-        <header class="header">
-
-            <!-- <div class="search-container">
-                <form method="get" class="search-form">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" name="q" value="{{ query }}" placeholder="Search by title, author, or ISBN...">
-                    <button type="submit">Buscar</button>
-                </form>
-            </div> -->
-
-        </header>
-
-        <!-- Content -->
-        <div class="container">
-
-            <!-- {% if livros %}
-            <div class="books-grid">
-                {% for livro in livros %}
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        {% if forloop.counter == 1 %}
-                        <span class="book-badge badge-new">NEW</span>
-                        {% elif forloop.counter == 2 %}
-                        <span class="book-badge badge-sale">SALE</span>
-                        {% elif forloop.counter == 4 %}
-                        <span class="book-badge badge-bestseller">BESTSELLER</span>
-                        {% elif forloop.counter == 7 %}
-                        <span class="book-badge badge-new">NEW</span>
-                        {% endif %}
-
-                        <div class="book-cover-inner">
-                            {% if livro.capa %}
-                            <img src="{{ livro.capa }}">
-                            {% else %}
-                            <div class="cover-text">
-                                <div class="cover-title">BOOK COVER</div>
-                                <div class="cover-subtitle">{{ livro.titulo|truncatewords:4 }}</div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="book-info">
-                        <div class="book-category">
-                            {{ livro.categoria }}
-                        </div>
-                        <h3 class="book-title">{{ livro.titulo }}</h3>
-                        <p class="num-pages">Páginas - {{ livro.num_paginas }}</p>
-                        <p class="book-author">{{ livro.autor }}</p>
-
-                        <div class="book-footer">
-                            <div class="book-rating">
-                                <div class="stars">
-                                    {% with rating=forloop.counter|divisibleby:3 %}
-                                    {% if rating %}
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    {% else %}
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star empty"></i>
-                                    {% endif %}
-                                    {% endwith %}
-                                </div>
-                                <span class="rating-value">{% cycle '4.2' '5.0' '4.7' '4.8' '3.5' '4.1' '4.9' '3.2' %}</span>
-                            </div>
-
-                            <div class="book-price-cart">
-                                <div class="book-price">
-                                    <span class="price-current">${% cycle '24.99' '18.50' '32.00' '21.99' '15.75' '19.00' '55.00' '12.50' %}</span>
-                                    {% if forloop.counter == 2 %}
-                                    <span class="price-old">$32.00</span>
-                                    {% endif %}
-                                </div>
-                                <button class="cart-btn">
-                                    <i class="fas fa-shopping-cart"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <label class="seletor">
+            <span class="sr-only">Ordenar por</span>
+            <i class="fa-solid fa-arrow-down-wide-short"></i>
+            <select name="ordem" data-auto-enviar>
+                {% for chave, rotulo in ordens %}
+                <option value="{{ chave }}"{% if chave == ordem_atual %} selected{% endif %}>{{ rotulo }}</option>
                 {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state" style="text-align: center; padding: 80px 20px;">
-                <i class="fas fa-search" style="font-size: 64px; color: #d1d5db; margin-bottom: 20px;"></i>
-                <h3 style="font-size: 20px; color: #6b7280; margin-bottom: 10px; font-weight: 600;">Nenhum livro encontrado</h3>
-                <p style="font-size: 15px; color: #9ca3af;">Tente buscar por outro título, autor ou ISBN</p>
-            </div>
-            {% endif %} -->
+            </select>
+        </label>
+        <noscript><button type="submit" class="botao botao--secundario">Aplicar</button></noscript>
+    </form>
+</div>
 
-            <!-- Pagination -->
-            {% if livros %}
-            <div class="pagination">
-                <button class="page-btn">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <span class="page-dots">...</span>
-                <button class="page-btn">12</button>
-                <button class="page-btn">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-            {% endif %}
+{% if page_obj.object_list %}
+<p class="contagem-resultados">
+    {{ page_obj.paginator.count }} livro{{ page_obj.paginator.count|pluralize }}
+    {% if busca_atual %} para “<strong>{{ busca_atual }}</strong>” · <a href="{% querystring q=None pagina=None %}">limpar filtro</a>{% endif %}
+</p>
 
-            <!-- Footer -->
-            <footer class="footer">
-                <p>&copy; 2024 LuminaBooks Management System. All rights reserved.</p>
-                <div class="footer-links">
-                    <a href="#">Privacy Policy</a>
-                    <a href="#">Terms of Service</a>
-                    <a href="#">Support Desk</a>
-                </div>
-            </footer>
-        </div>
-    </div>
-</body>
+<div class="grade-livros">
+    {% for livro in page_obj %}
+    {% include 'core/_livro_card.html' %}
+    {% endfor %}
+</div>
 
-</html>
+{% if page_obj.paginator.num_pages > 1 %}
+{% include 'core/_paginacao.html' with atual=page_obj.number faixa=faixa_paginas tem_anterior=page_obj.has_previous tem_proxima=page_obj.has_next %}
+{% endif %}
+
+{% elif busca_atual %}
+<div class="vazio">
+    <i class="fa-solid fa-filter-circle-xmark"></i>
+    <h3>Nada encontrado para “{{ busca_atual }}”</h3>
+    <p>Tente outro termo ou <a href="{% querystring q=None pagina=None %}">limpe o filtro</a>.</p>
+</div>
+{% else %}
+<div class="vazio">
+    <i class="{% if status_atual %}{{ status_atual|icone_status }}{% else %}fa-solid fa-book-open{% endif %}"></i>
+    <h3>{% if status_atual %}Nenhum livro em “{{ status_atual|rotulo_status }}”{% else %}Sua estante está vazia{% endif %}</h3>
+    <p>Encontre livros na busca e adicione-os aqui.</p>
+    <a href="{% url 'core:buscar' %}" class="botao botao--primario"><i class="fa-solid fa-magnifying-glass"></i> Buscar livros</a>
+</div>
+{% endif %}
+{% endblock %}

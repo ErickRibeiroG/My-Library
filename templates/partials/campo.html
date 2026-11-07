@@ -1,0 +1,18 @@
+{# Renderiza um campo de formulário: {% include 'partials/campo.html' with campo=form.email icone='fa-envelope' %} #}
+<div class="campo{% if campo.errors %} campo--erro{% endif %}">
+    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+    <div class="campo__controle{% if icone %} campo__controle--icone{% endif %}">
+        {% if icone %}<i class="fa-solid {{ icone }} campo__icone" aria-hidden="true"></i>{% endif %}
+        {{ campo }}
+        {% if campo.field.widget.input_type == 'password' %}
+        <button type="button" class="campo__ver-senha" data-ver-senha aria-label="Mostrar senha">
+            <i class="fa-regular fa-eye"></i>
+        </button>
+        {% endif %}
+    </div>
+    {% for erro in campo.errors %}
+    <p class="campo__erro">{{ erro }}</p>
+    {% empty %}
+    {% if campo.help_text %}<p class="campo__ajuda">{{ campo.help_text|safe }}</p>{% endif %}
+    {% endfor %}
+</div>

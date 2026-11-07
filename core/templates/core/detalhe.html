@@ -1,0 +1,77 @@
+{% extends 'layouts/app.html' %}
+{% load livros %}
+
+{% block title %}{{ livro.titulo }}{% endblock %}
+
+{% block topo %}
+<a href="{% url 'core:biblioteca' %}?status={{ livro.tipo }}" class="link-voltar">
+    <i class="fa-solid fa-arrow-left"></i> {{ livro.get_tipo_display }}
+</a>
+{% endblock %}
+
+{% block content %}
+<article class="detalhe">
+    <div class="detalhe__capa">
+        {% include 'core/_capa.html' with titulo=livro.titulo autor=livro.autor capa=livro.capa grande=True %}
+    </div>
+
+    <div class="detalhe__info">
+        {% if livro.categoria %}<p class="card-livro__categoria">{{ livro.categoria }}</p>{% endif %}
+        <h1 class="detalhe__titulo">{{ livro.titulo }}</h1>
+        <p class="detalhe__autor">{{ livro.autor|default:"Autor desconhecido" }}</p>
+
+        <dl class="detalhe__ficha">
+            <div><dt>Ano</dt><dd>{{ livro.ano|default:"—" }}</dd></div>
+            <div><dt>Páginas</dt><dd>{{ livro.paginas|default:"—" }}</dd></div>
+            <div><dt>Adicionado em</dt><dd>{{ livro.criado_em|date:"d/m/Y" }}</dd></div>
+            {% if livro.lido_em %}<div><dt>Lido em</dt><dd>{{ livro.lido_em|date:"d/m/Y" }}</dd></div>{% endif %}
+        </dl>
+
+        <section class="detalhe__bloco">
+            <h2>Status</h2>
+            <div class="segmentado" role="group" aria-label="Status de leitura">
+                {% status_disponiveis as lista_status %}
+                {% for valor, rotulo, icone in lista_status %}
+                <form method="post" action="{% url 'core:alterar_status' livro.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="tipo" value="{{ valor }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="segmentado__opcao segmentado__opcao--{{ valor }}{% if livro.tipo == valor %} ativo{% endif %}"
+                        {% if livro.tipo == valor %}aria-pressed="true"{% endif %}>
+                        <i class="{{ icone }}"></i> {{ rotulo }}
+                    </button>
+                </form>
+                {% endfor %}
+            </div>
+        </section>
+
+        {% if livro.tipo == 'lido' %}
+        <section class="detalhe__bloco">
+            <h2>Sua avaliação</h2>
+            {% include 'core/_estrelas.html' with grande=True %}
+            <p class="detalhe__dica">{% if livro.avaliacao %}Clique na mesma estrela para remover a nota.{% else %}Ainda sem nota — o que achou?{% endif %}</p>
+        </section>
+        {% endif %}
+
+        {% if livro.descricao %}
+        <section class="detalhe__bloco">
+            <h2>Sinopse</h2>
+            <p class="detalhe__descricao">{{ livro.descricao|linebreaksbr }}</p>
+        </section>
+        {% endif %}
+
+        <div class="detalhe__acoes">
+            {% if livro.link_externo %}
+            <a href="{{ livro.link_externo }}" class="botao botao--secundario" target="_blank" rel="noopener noreferrer">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver na fonte
+            </a>
+            {% endif %}
+            <form method="post" action="{% url 'core:remover' livro.pk %}" data-confirmar="Remover “{{ livro.titulo }}” da sua biblioteca?">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'core:biblioteca' %}">
+                <button type="submit" class="botao botao--perigo"><i class="fa-solid fa-trash-can"></i> Remover</button>
+            </form>
+        </div>
+    </div>
+</article>
+{% endblock %}

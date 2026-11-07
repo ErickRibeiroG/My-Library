@@ -1,0 +1,24 @@
+{# Parâmetros: atual, faixa (números e '…'), tem_anterior, tem_proxima #}
+<nav class="paginacao" aria-label="Paginação">
+    {% if tem_anterior %}
+    <a href="{% querystring pagina=atual|add:-1 %}" class="paginacao__item" aria-label="Página anterior"><i class="fa-solid fa-chevron-left"></i></a>
+    {% else %}
+    <span class="paginacao__item desabilitado" aria-hidden="true"><i class="fa-solid fa-chevron-left"></i></span>
+    {% endif %}
+
+    {% for numero in faixa %}
+    {% if numero == '…' %}
+    <span class="paginacao__reticencias">…</span>
+    {% elif numero == atual %}
+    <span class="paginacao__item ativo" aria-current="page">{{ numero }}</span>
+    {% else %}
+    <a href="{% querystring pagina=numero %}" class="paginacao__item">{{ numero }}</a>
+    {% endif %}
+    {% endfor %}
+
+    {% if tem_proxima %}
+    <a href="{% querystring pagina=atual|add:1 %}" class="paginacao__item" aria-label="Próxima página"><i class="fa-solid fa-chevron-right"></i></a>
+    {% else %}
+    <span class="paginacao__item desabilitado" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+    {% endif %}
+</nav>

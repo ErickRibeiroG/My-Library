@@ -1,305 +1,61 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
+{% extends 'layouts/app.html' %}
+{% load humanize %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuminaBooks - Buscar Livros</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'core/css/buscar.css' %}">
-</head>
+{% block title %}{% if query %}“{{ query }}” — Buscar{% else %}Buscar livros{% endif %}{% endblock %}
 
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="/" class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-book"></i>
-                </div>
-                <span class="logo-text">My Library</span>
-            </a>
-        </div>
+{% block topo %}
+<form method="get" action="{% url 'core:buscar' %}" class="busca busca--topo" role="search">
+    <i class="fa-solid fa-magnifying-glass busca__icone"></i>
+    <input type="search" name="q" value="{{ query }}" placeholder="Buscar por título, autor ou ISBN…" aria-label="Buscar livros" {% if not query %}autofocus{% endif %} required>
+    <button type="submit" class="botao botao--primario">Buscar</button>
+</form>
+{% endblock %}
 
-        <nav class="sidebar-nav">
+{% block content %}
 
-            <div class="nav-section">
-                <h3 class="nav-section-title">COLEÇÕES</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="{% url 'home' %}" class="nav-link">
-                            <i class="fas fa-book"></i>
-                            <span>Livros</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h3 class="nav-section-title">DESCOBRIR</h3>
-                <ul class="nav-list">
-                    <li class="nav-item active">
-                        <a href="{% url 'buscar' %}" class="nav-link">
-                            <i class="fas fa-search"></i>
-                            <span>Buscar</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h3 class="nav-section-title">CONTA</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Configurações</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-        </nav>
-
-        <div class="sidebar-footer">
-            <div class="user-profile">
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="user-info">
-                    <div class="user-name">{{ user.first_name}}</div>
-                    <div class="user-role"></div>
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Header -->
-        <header class="header">
-            <div class="search-container">
-                <form method="get" class="search-form">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" name="q" value="{{ query|default:'' }}"
-                        placeholder="Search by title, author, or ISBN...">
-                    <button type="submit">Buscar</button>
-                </form>
-            </div>
-
-        </header>
-
-        <!-- Content -->
-        <div class="container">
-
-            <!-- <div class="filters-bar">
-                <div class="filters-left">
-                    <div class="filter-group">
-                        <label class="filter-label">GENRE</label>
-                        <select class="filter-select">
-                            <option>All Genres</option>
-                            <option>Fiction</option>
-                            <option>Mystery</option>
-                            <option>Non-Fiction</option>
-                            <option>Biography</option>
-                            <option>Sci-Fi</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">PRICE RANGE</label>
-                        <select class="filter-select">
-                            <option>All Prices</option>
-                            <option>$0 - $20</option>
-                            <option>$20 - $50</option>
-                            <option>$50+</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">RATING</label>
-                        <select class="filter-select">
-                            <option>Any Rating</option>
-                            <option>4+ Stars</option>
-                            <option>3+ Stars</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="filters-right">
-                    {% if livros %}
-                    <span class="results-count"><span>{{ livros|length }}</span> results found</span>
-                    {% else %}
-                    <span class="results-count"><span>0</span> results found</span>
-                    {% endif %}
-                    <div class="view-toggle">
-                        <button class="view-btn active">
-                            <i class="fas fa-th"></i>
-                        </button>
-                        <button class="view-btn">
-                            <i class="fas fa-list"></i>
-                        </button>
-                    </div>
-                </div>
-
-            </div> -->
-
-            {% if livros %}
-            <div class="books-grid">
-                {% for livro in livros %}
-                <div class="book-card">
-                    <div class="book-cover-wrapper">
-                        {% if forloop.counter == 1 %}
-                        <span class="book-badge badge-new">NEW</span>
-                        {% elif forloop.counter == 2 %}
-                        <span class="book-badge badge-sale">SALE</span>
-                        {% elif forloop.counter == 4 %}
-                        <span class="book-badge badge-bestseller">BESTSELLER</span>
-                        {% elif forloop.counter == 7 %}
-                        <span class="book-badge badge-new">NEW</span>
-                        {% endif %}
-
-                        <div class="book-cover-inner">
-                            {% if livro.capa %}
-                            <img src="{{ livro.capa }}">
-                            {% else %}
-                            <div class="cover-text">
-                                <div class="cover-title">BOOK COVER</div>
-                                <div class="cover-subtitle">{{ livro.titulo|truncatewords:4 }}</div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <div class="book-info">
-                        <div class="book-category">
-                            {{ livro.categoria }}
-                        </div>
-                        <h3 class="book-title">{{ livro.titulo }}</h3>
-                        <p class="book-year">Ano - {{ livro.ano }}</p>
-                        <p class="num-pages">Páginas - {{ livro.num_paginas }}</p>
-                        <p class="book-author">{{ livro.autor }}</p>
-
-                        <div class="book-footer">
-                            <!-- <div class="book-rating">
-                                <div class="stars">
-                                    {% with rating=forloop.counter|divisibleby:3 %}
-                                    {% if rating %}
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    {% else %}
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star"></i>
-                                    <i class="fas fa-star star empty"></i>
-                                    {% endif %}
-                                    {% endwith %}
-                                </div>
-                                <span class="rating-value">{% cycle '4.2' '5.0' '4.7' '4.8' '3.5' '4.1' '4.9' '3.2' %}</span>
-                            </div> -->
-
-                            <!-- <div class="book-price-cart">
-                                <div class="book-price">
-                                    <span class="price-current">${% cycle '24.99' '18.50' '32.00' '21.99' '15.75' '19.00' '55.00' '12.50' %}</span>
-                                    {% if forloop.counter == 2 %}
-                                    <span class="price-old">$32.00</span>
-                                    {% endif %}
-                                </div>
-                                <button class="cart-btn">
-                                    <i class="fas fa-shopping-cart"></i>
-                                </button>
-                            </div> -->
-
-                            <div class="botoes-livro">
-
-                                <form method="POST" title="Quero ler">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="titulo" value="{{ livro.titulo }}">
-                                    <input type="hidden" name="categoria" value="{{ livro.categoria }}">
-                                    <input type="hidden" name="autor" value="{{ livro.autor }}">
-                                    <input type="hidden" name="ano" value="{{ livro.ano }}">
-                                    <input type="hidden" name="paginas" value="{{ livro.num_paginas }}">
-                                    <input type="hidden" name="capa" value="{{ livro.capa }}">
-                                    <input type="hidden" name="tipo" value="quero">
-
-                                    <button class="btn quero">
-                                        <i class="fa-brands fa-readme"></i>
-                                    </button>
-
-                                </form>
-
-                                <form method="POST" title="Comprado">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="titulo" value="{{ livro.titulo }}">
-                                    <input type="hidden" name="categoria" value="{{ livro.categoria }}">
-                                    <input type="hidden" name="autor" value="{{ livro.autor }}">
-                                    <input type="hidden" name="ano" value="{{ livro.ano }}">
-                                    <input type="hidden" name="paginas" value="{{ livro.num_paginas }}">
-                                    <input type="hidden" name="capa" value="{{ livro.capa }}">
-                                    <input type="hidden" name="tipo" value="comprado">
-
-                                    <button class="btn comprado">
-                                        <i class="fa-solid fa-sack-dollar"></i>
-                                    </button>
-
-                                </form>
-
-                                <form method="POST" title="Lido">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="titulo" value="{{ livro.titulo }}">
-                                    <input type="hidden" name="categoria" value="{{ livro.categoria }}">
-                                    <input type="hidden" name="autor" value="{{ livro.autor }}">
-                                    <input type="hidden" name="ano" value="{{ livro.ano }}">
-                                    <input type="hidden" name="paginas" value="{{ livro.num_paginas }}">
-                                    <input type="hidden" name="capa" value="{{ livro.capa }}">
-                                    <input type="hidden" name="tipo" value="lido">
-
-                                    <button class="btn lido">
-                                        <i class="fa-solid fa-check"></i>
-                                    </button>
-
-                                </form>
-
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state" style="text-align: center; padding: 80px 20px;">
-                <i class="fas fa-search" style="font-size: 64px; color: #d1d5db; margin-bottom: 20px;"></i>
-                <h3 style="font-size: 20px; color: #6b7280; margin-bottom: 10px; font-weight: 600;">Nenhum livro
-                    encontrado</h3>
-                <p style="font-size: 15px; color: #9ca3af;">Tente buscar por outro título, autor ou ISBN</p>
-            </div>
-            {% endif %}
-
-            <!-- Pagination -->
-            {% if livros %}
-            <div class="pagination">
-                <button class="page-btn">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <span class="page-dots">...</span>
-                <button class="page-btn">12</button>
-                <button class="page-btn">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-            {% endif %}
-
-        </div>
+{% if not query %}
+<section class="busca-inicio">
+    <span class="busca-inicio__icone"><i class="fa-solid fa-book-open-reader"></i></span>
+    <h2>O que você quer ler hoje?</h2>
+    <p>Pesquise em milhões de livros do Google Books e da Open Library.</p>
+    <div class="sugestoes">
+        {% for sugestao in sugestoes %}
+        <a href="?q={{ sugestao|urlencode }}" class="sugestao">{{ sugestao }}</a>
+        {% endfor %}
     </div>
-</body>
+</section>
 
-</html>
+{% else %}
+
+{% if resultado.erro %}
+<div class="alerta alerta--erro"><i class="fa-solid fa-plug-circle-xmark"></i><span>{{ resultado.erro }}</span></div>
+{% elif resultado.aviso %}
+<div class="alerta alerta--aviso"><i class="fa-solid fa-circle-info"></i><span>{{ resultado.aviso }}</span></div>
+{% endif %}
+
+{% if itens %}
+<p class="contagem-resultados">
+    Cerca de <strong>{{ resultado.total|intcomma }}</strong> resultado{{ resultado.total|pluralize }} para “<strong>{{ query }}</strong>”
+    <span class="contagem-resultados__fonte">via {{ resultado.fonte }}</span>
+</p>
+
+<div class="grade-livros">
+    {% for livro, status_atual in itens %}
+    {% include 'core/_resultado_card.html' %}
+    {% endfor %}
+</div>
+
+{% if faixa_paginas %}
+{% include 'core/_paginacao.html' with atual=resultado.pagina faixa=faixa_paginas tem_anterior=resultado.tem_anterior tem_proxima=resultado.tem_proxima %}
+{% endif %}
+
+{% elif not resultado.erro %}
+<div class="vazio">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <h3>Nenhum livro encontrado para “{{ query }}”</h3>
+    <p>Confira a ortografia ou tente buscar pelo nome do autor.</p>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}
