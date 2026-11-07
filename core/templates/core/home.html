@@ -1,496 +1,118 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
+{% extends 'layouts/app.html' %}
+{% load humanize livros %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuminaBooks - Minha Biblioteca</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{% static 'core/css/home.css' %}">
-    <style>
-        /* ==================== SHELF ROWS ==================== */
-        .shelf-section {
-            margin-bottom: 48px;
-        }
+{% block title %}Início{% endblock %}
 
-        .shelf-header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 20px;
-            padding-bottom: 14px;
-            border-bottom: 2px solid #f3f4f6;
-        }
+{% block topo %}
+<p class="topo__sobretitulo">{% now "l, j \d\e F" %}</p>
+<h1 class="topo__titulo">Olá, {{ user.first_name|default:user.get_username }}</h1>
+{% endblock %}
 
-        .shelf-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            color: white;
-            flex-shrink: 0;
-        }
+{% block acoes_topo %}
+<a href="{% url 'core:buscar' %}" class="botao botao--primario">
+    <i class="fa-solid fa-plus"></i><span>Adicionar livro</span>
+</a>
+{% endblock %}
 
-        .shelf-icon.quero-icon {
-            background: linear-gradient(135deg, #3498db, #1a6faa);
-        }
+{% block content %}
+{% if resumo.total %}
 
-        .shelf-icon.comprado-icon {
-            background: linear-gradient(135deg, #e67e22, #b85e0c);
-        }
-
-        .shelf-icon.lido-icon {
-            background: linear-gradient(135deg, #27ae60, #1a7a42);
-        }
-
-        .shelf-title-group {
-            flex: 1;
-        }
-
-        .shelf-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 2px;
-        }
-
-        .shelf-subtitle {
-            font-size: 12px;
-            color: #9ca3af;
-            font-weight: 400;
-        }
-
-        .shelf-count {
-            font-size: 12px;
-            font-weight: 700;
-            padding: 4px 12px;
-            border-radius: 20px;
-            color: white;
-        }
-
-        .shelf-count.quero-count {
-            background: #3498db;
-        }
-
-        .shelf-count.comprado-count {
-            background: #e67e22;
-        }
-
-        .shelf-count.lido-count {
-            background: #27ae60;
-        }
-
-        /* Horizontal scroll shelf */
-        .shelf-scroll-wrapper {
-            overflow-x: auto;
-            padding-bottom: 12px;
-            scrollbar-width: thin;
-            scrollbar-color: #e5e7eb transparent;
-        }
-
-        .shelf-scroll-wrapper::-webkit-scrollbar {
-            height: 4px;
-        }
-
-        .shelf-scroll-wrapper::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .shelf-scroll-wrapper::-webkit-scrollbar-thumb {
-            background: #e5e7eb;
-            border-radius: 4px;
-        }
-
-        .shelf-books-row {
-            display: flex;
-            gap: 20px;
-            min-width: max-content;
-        }
-
-        .shelf-books-row .book-card {
-            width: 170px;
-            flex-shrink: 0;
-        }
-
-        /* Empty shelf state */
-        .shelf-empty {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 28px 24px;
-            background: #f9fafb;
-            border-radius: 12px;
-            border: 1px dashed #e5e7eb;
-        }
-
-        .shelf-empty-icon {
-            font-size: 32px;
-            color: #d1d5db;
-        }
-
-        .shelf-empty-text h4 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #6b7280;
-            margin-bottom: 4px;
-        }
-
-        .shelf-empty-text p {
-            font-size: 12px;
-            color: #9ca3af;
-        }
-
-        /* Shelf accent line */
-        .shelf-accent {
-            display: block;
-            height: 3px;
-            width: 40px;
-            border-radius: 2px;
-            margin-top: 6px;
-        }
-
-        .shelf-accent.quero {
-            background: #3498db;
-        }
-
-        .shelf-accent.comprado {
-            background: #e67e22;
-        }
-
-        .shelf-accent.lido {
-            background: #27ae60;
-        }
-    </style>
-</head>
-
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <a href="/" class="logo">
-                <div class="logo-icon">
-                    <i class="fas fa-book"></i>
-                </div>
-                <span class="logo-text">My Library</span>
-            </a>
-        </div>
-
-        <nav class="sidebar-nav">
-            <div class="nav-section">
-                <h3 class="nav-section-title">COLEÇÕES</h3>
-                <ul class="nav-list">
-                    <li class="nav-item active">
-                        <a href="{% url 'home' %}" class="nav-link">
-                            <i class="fas fa-book"></i>
-                            <span>Livros</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h3 class="nav-section-title">DESCOBRIR</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="{% url 'buscar' %}" class="nav-link">
-                            <i class="fas fa-search"></i>
-                            <span>Buscar</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h3 class="nav-section-title">CONTA</h3>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Configurações</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-
-        <div class="sidebar-footer">
-            <div class="user-profile">
-                <div class="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="user-info">
-                    <div class="user-name">{{ user.first_name }}</div>
-                    <div class="user-role"></div>
-                </div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <header class="header"></header>
-
-        <div class="container">
-
-            <!-- ===== FILEIRA: QUERO LER ===== -->
-            <section class="shelf-section">
-                <div class="shelf-header">
-                    <div class="shelf-icon quero-icon">
-                        <i class="fa-brands fa-readme"></i>
-                    </div>
-                    <div class="shelf-title-group">
-                        <div class="shelf-title">Quero Ler</div>
-                        <div class="shelf-subtitle">Livros na sua lista de desejos</div>
-                        <span class="shelf-accent quero"></span>
-                    </div>
-                    <span class="shelf-count quero-count">{{ livros_quero|length }} livro{{ livros_quero|length|pluralize:"s" }}</span>
-                </div>
-
-                {% if livros_quero %}
-                <div class="shelf-scroll-wrapper">
-                    <div class="shelf-books-row">
-                        {% for livro in livros_quero %}
-                        <div class="book-card">
-                            <div class="book-cover-wrapper">
-                                <div class="book-cover-inner">
-                                    {% if livro.capa %}
-                                    <img src="{{ livro.capa }}">
-                                    {% else %}
-                                    <div class="cover-text">
-                                        <div class="cover-title">BOOK COVER</div>
-                                        <div class="cover-subtitle">{{ livro.titulo|truncatewords:4 }}</div>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="book-info">
-                                <div class="book-category">{{ livro.categoria }}</div>
-                                <h3 class="book-title">{{ livro.titulo }}</h3>
-                                <p class="book-year">Ano - {{ livro.ano }}</p>
-                                <p class="num-pages">Páginas - {{ livro.num_paginas }}</p>
-                                <p class="book-author">{{ livro.autor }}</p>
-                                <div class="book-footer">
-
-                                    <div class="botoes-livro">
-                                        <form method="POST">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="livro_id" value="{{ livro.id }}">
-                                            <input type="hidden" name="tipo" value="comprado">
-                                            <button class="btn comprado" title="Marcar como comprado">
-                                                <i class="fa-solid fa-sack-dollar"></i>
-                                            </button>
-                                        </form>
-                                        <form method="POST">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="livro_id" value="{{ livro.id }}">
-                                            <input type="hidden" name="tipo" value="lido">
-                                            <button class="btn lido" title="Marcar como lido">
-                                                <i class="fa-solid fa-check"></i>
-                                            </button>
-                                        </form>
-                                        <form method="POST">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="livro_id" value="{{ livro.id }}">
-                                            <input type="hidden" name="tipo" value="remover">
-                                            <button class="btn remover" title="Remover">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="shelf-empty">
-                    <i class="fa-brands fa-readme shelf-empty-icon"></i>
-                    <div class="shelf-empty-text">
-                        <h4>Nenhum livro aqui ainda</h4>
-                        <p>Busque livros e adicione à sua lista de leitura</p>
-                    </div>
-                </div>
-                {% endif %}
-            </section>
-
-            <!-- ===== FILEIRA: COMPRADO ===== -->
-            <section class="shelf-section">
-                <div class="shelf-header">
-                    <div class="shelf-icon comprado-icon">
-                        <i class="fa-solid fa-sack-dollar"></i>
-                    </div>
-                    <div class="shelf-title-group">
-                        <div class="shelf-title">Comprado</div>
-                        <div class="shelf-subtitle">Livros que você já possui</div>
-                        <span class="shelf-accent comprado"></span>
-                    </div>
-                    <span class="shelf-count comprado-count">{{ livros_comprado|length }} livro{{ livros_comprado|length|pluralize:"s" }}</span>
-                </div>
-
-                {% if livros_comprado %}
-                <div class="shelf-scroll-wrapper">
-                    <div class="shelf-books-row">
-                        {% for livro in livros_comprado %}
-                        <div class="book-card">
-                            <div class="book-cover-wrapper">
-                                <div class="book-cover-inner">
-                                    {% if livro.capa %}
-                                    <img src="{{ livro.capa }}">
-                                    {% else %}
-                                    <div class="cover-text">
-                                        <div class="cover-title">BOOK COVER</div>
-                                        <div class="cover-subtitle">{{ livro.titulo|truncatewords:4 }}</div>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="book-info">
-                                <div class="book-category">{{ livro.categoria }}</div>
-                                <h3 class="book-title">{{ livro.titulo }}</h3>
-                                <p class="book-year">Ano - {{ livro.ano }}</p>
-                                <p class="num-pages">Páginas - {{ livro.num_paginas }}</p>
-                                <p class="book-author">{{ livro.autor }}</p>
-                                <div class="book-footer">
-                                    <div class="botoes-livro">
-                                        <form method="POST">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="livro_id" value="{{ livro.id }}">
-                                            <input type="hidden" name="tipo" value="lido">
-                                            <button class="btn lido" title="Marcar como lido">
-                                                <i class="fa-solid fa-check"></i>
-                                            </button>
-                                        </form>
-                                        <form method="POST">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="livro_id" value="{{ livro.id }}">
-                                            <input type="hidden" name="tipo" value="remover">
-                                            <button class="btn remover" title="Remover">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="shelf-empty">
-                    <i class="fa-solid fa-sack-dollar shelf-empty-icon"></i>
-                    <div class="shelf-empty-text">
-                        <h4>Nenhum livro aqui ainda</h4>
-                        <p>Marque livros como comprado ao adicioná-los</p>
-                    </div>
-                </div>
-                {% endif %}
-            </section>
-
-            <!-- ===== FILEIRA: LIDO ===== -->
-            <section class="shelf-section">
-                <div class="shelf-header">
-                    <div class="shelf-icon lido-icon">
-                        <i class="fa-solid fa-check"></i>
-                    </div>
-                    <div class="shelf-title-group">
-                        <div class="shelf-title">Lido</div>
-                        <div class="shelf-subtitle">Livros que você já leu</div>
-                        <span class="shelf-accent lido"></span>
-                    </div>
-                    <span class="shelf-count lido-count">{{ livros_lido|length }} livro{{ livros_lido|length|pluralize:"s" }}</span>
-                </div>
-
-                {% if livros_lido %}
-                <div class="shelf-scroll-wrapper">
-                    <div class="shelf-books-row">
-                        {% for livro in livros_lido %}
-                        <div class="book-card">
-                            <div class="book-cover-wrapper">
-                                <div class="book-cover-inner">
-                                    {% if livro.capa %}
-                                    <img src="{{ livro.capa }}">
-                                    {% else %}
-                                    <div class="cover-text">
-                                        <div class="cover-title">BOOK COVER</div>
-                                        <div class="cover-subtitle">{{ livro.titulo|truncatewords:4 }}</div>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="book-info">
-                                <div class="book-category">{{ livro.categoria }}</div>
-                                <h3 class="book-title">{{ livro.titulo }}</h3>
-                                <p class="book-year">Ano - {{ livro.ano }}</p>
-                                <p class="num-pages">Páginas - {{ livro.num_paginas }}</p>
-                                <p class="book-author">{{ livro.autor }}</p>
-
-                                <div class="book-footer">
-
-                                    <!-- Sistema de avaliação por estrelas -->
-                                    <form method="POST" class="star-form">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="livro_id" value="{{ livro.id }}">
-                                        <input type="hidden" name="avaliacao" id="avaliacao-{{ livro.id }}" value="{{ livro.avaliacao|default:'' }}">
-
-                                        <div class="star-rating" data-livro="{{ livro.id }}">
-                                            {% for i in "12345" %}
-                                            <button type="submit"
-                                                class="star-btn {% if livro.avaliacao and forloop.counter <= livro.avaliacao %}filled{% endif %}"
-                                                data-value="{{ forloop.counter }}"
-                                                onclick="document.getElementById('avaliacao-{{ livro.id }}').value='{{ forloop.counter }}'"
-                                                title="{{ forloop.counter }} estrela{{ forloop.counter|pluralize:'s' }}">
-                                                <i class="fa-solid fa-star"></i>
-                                            </button>
-                                            {% endfor %}
-                                        </div>
-
-                                        {% if livro.avaliacao %}
-                                        <p class="avaliacao-label">{{ livro.avaliacao }}/5</p>
-                                        {% else %}
-                                        <p class="avaliacao-label sem-avaliacao">Sem avaliação</p>
-                                        {% endif %}
-
-                                    </form>
-
-                                    <!-- Botão remover -->
-                                    <div class="botoes-livro" style="margin-top: 8px;">
-                                        <form method="POST">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="livro_id" value="{{ livro.id }}">
-                                            <input type="hidden" name="tipo" value="remover">
-                                            <button class="btn remover" title="Remover">
-                                                <i class="fa-solid fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-
-                                </div>
-
-
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% else %}
-                <div class="shelf-empty">
-                    <i class="fa-solid fa-check shelf-empty-icon"></i>
-                    <div class="shelf-empty-text">
-                        <h4>Nenhum livro aqui ainda</h4>
-                        <p>Marque livros como lidos para vê-los aqui</p>
-                    </div>
-                </div>
-                {% endif %}
-            </section>
-
+<section class="resumo" aria-label="Resumo da sua biblioteca">
+    <div class="stat">
+        <span class="stat__icone stat__icone--azul"><i class="fa-solid fa-layer-group"></i></span>
+        <div>
+            <p class="stat__rotulo">Na estante</p>
+            <p class="stat__valor">{{ resumo.total }}</p>
+            <p class="stat__extra">livro{{ resumo.total|pluralize }} no total</p>
         </div>
     </div>
-</body>
+    <div class="stat">
+        <span class="stat__icone stat__icone--verde"><i class="fa-solid fa-circle-check"></i></span>
+        <div>
+            <p class="stat__rotulo">Lidos</p>
+            <p class="stat__valor">{{ resumo.lidos }}</p>
+            <p class="stat__extra">{{ resumo.lidos_no_ano }} em {{ ano_atual }}</p>
+        </div>
+    </div>
+    <div class="stat">
+        <span class="stat__icone stat__icone--laranja"><i class="fa-solid fa-file-lines"></i></span>
+        <div>
+            <p class="stat__rotulo">Páginas lidas</p>
+            <p class="stat__valor">{{ resumo.paginas_lidas|default:0|intcomma }}</p>
+            <p class="stat__extra">somando os livros lidos</p>
+        </div>
+    </div>
+    <div class="stat">
+        <span class="stat__icone stat__icone--amarelo"><i class="fa-solid fa-star"></i></span>
+        <div>
+            <p class="stat__rotulo">Avaliação média</p>
+            <p class="stat__valor">{% if resumo.media_avaliacao %}{{ resumo.media_avaliacao|floatformat:1 }}<small>/5</small>{% else %}—{% endif %}</p>
+            <p class="stat__extra">das suas leituras</p>
+        </div>
+    </div>
+</section>
 
-</html>
+<section class="progresso">
+    <div class="progresso__texto">
+        <strong>{{ resumo.percentual_lido }}%</strong> da sua estante já foi lida
+    </div>
+    <div class="progresso__barra" role="progressbar" aria-valuenow="{{ resumo.percentual_lido }}" aria-valuemin="0" aria-valuemax="100">
+        <span style="width: {{ resumo.percentual_lido }}%"></span>
+    </div>
+</section>
+
+{% for estante in estantes %}
+<section class="estante estante--{{ estante.status }}">
+    <header class="estante__cabecalho">
+        <span class="estante__icone"><i class="{{ estante.icone }}"></i></span>
+        <div class="estante__titulos">
+            <h2 class="estante__titulo">{{ estante.titulo }}</h2>
+            <p class="estante__subtitulo">{{ estante.subtitulo }}</p>
+        </div>
+        <span class="estante__contador">{{ estante.total }}</span>
+        {% if estante.total %}
+        <a href="{% url 'core:biblioteca' %}?status={{ estante.status }}" class="link-seta">Ver todos <i class="fa-solid fa-arrow-right"></i></a>
+        {% endif %}
+    </header>
+
+    {% if estante.livros %}
+    <div class="estante__trilho">
+        {% for livro in estante.livros %}
+        {% include 'core/_livro_card.html' %}
+        {% endfor %}
+        {% if estante.restantes %}
+        <a href="{% url 'core:biblioteca' %}?status={{ estante.status }}" class="card-mais">
+            <span>+{{ estante.restantes }}</span>
+            ver todos
+        </a>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="vazio vazio--compacto">
+        <i class="{{ estante.icone }}"></i>
+        <div>
+            <h3>Nenhum livro aqui ainda</h3>
+            <p>{{ estante.vazio }}</p>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endfor %}
+
+{% else %}
+
+<section class="boas-vindas">
+    <div class="boas-vindas__ilustracao" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <h2>Sua biblioteca está vazia</h2>
+    <p>Busque entre milhões de livros e organize-os em <strong>Quero ler</strong>, <strong>Comprados</strong> e <strong>Lidos</strong>.</p>
+    <form action="{% url 'core:buscar' %}" method="get" class="busca busca--destaque">
+        <i class="fa-solid fa-magnifying-glass busca__icone"></i>
+        <input type="search" name="q" placeholder="Título, autor ou ISBN…" aria-label="Buscar livros" required>
+        <button type="submit" class="botao botao--primario">Buscar</button>
+    </form>
+</section>
+
+{% endif %}
+{% endblock %}

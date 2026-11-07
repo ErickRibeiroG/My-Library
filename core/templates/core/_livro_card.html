@@ -1,0 +1,50 @@
+{% load livros %}
+<article class="card-livro">
+    <a href="{% url 'core:detalhe' livro.pk %}" class="card-livro__capa" tabindex="-1" aria-hidden="true">
+        {% include 'core/_capa.html' with titulo=livro.titulo autor=livro.autor capa=livro.capa %}
+        {% if mostrar_status %}
+        <span class="chip chip--{{ livro.tipo }}"><i class="{{ livro.tipo|icone_status }}"></i>{{ livro.get_tipo_display }}</span>
+        {% endif %}
+    </a>
+
+    <div class="card-livro__corpo">
+        {% if livro.categoria %}<p class="card-livro__categoria">{{ livro.categoria }}</p>{% endif %}
+        <h3 class="card-livro__titulo">
+            <a href="{% url 'core:detalhe' livro.pk %}" title="{{ livro.titulo }}">{{ livro.titulo }}</a>
+        </h3>
+        <p class="card-livro__autor">{{ livro.autor|default:"Autor desconhecido" }}</p>
+        <p class="card-livro__meta">
+            {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
+            {% if livro.paginas %}<span>{{ livro.paginas }} pág.</span>{% endif %}
+        </p>
+
+        <div class="card-livro__rodape">
+            {% if livro.tipo == 'lido' %}
+            {% include 'core/_estrelas.html' %}
+            {% endif %}
+
+            <div class="card-livro__acoes">
+                {% status_disponiveis as lista_status %}
+                {% for valor, rotulo, icone in lista_status %}
+                {% if valor != livro.tipo %}
+                <form method="post" action="{% url 'core:alterar_status' livro.pk %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="tipo" value="{{ valor }}">
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="botao-acao botao-acao--{{ valor }}" title="Mover para “{{ rotulo }}”" aria-label="Mover para {{ rotulo }}">
+                        <i class="{{ icone }}"></i>
+                    </button>
+                </form>
+                {% endif %}
+                {% endfor %}
+                <form method="post" action="{% url 'core:remover' livro.pk %}" data-confirmar="Remover “{{ livro.titulo }}” da sua biblioteca?">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="botao-acao botao-acao--remover" title="Remover" aria-label="Remover">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</article>

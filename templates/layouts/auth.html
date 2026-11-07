@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block body_class %}pagina-auth{% endblock %}
+
+{% block body %}
+<div class="auth">
+    <aside class="auth__marca">
+        <a href="{% url 'account:login' %}" class="logo logo--claro">
+            <span class="logo__icone"><i class="fa-solid fa-book-open"></i></span>
+            <span class="logo__texto">My Library</span>
+        </a>
+
+        <div class="auth__chamada">
+            <h1>Sua biblioteca pessoal, organizada.</h1>
+            <p>Encontre livros, monte suas estantes e acompanhe cada leitura em um só lugar.</p>
+            <ul class="auth__recursos">
+                <li><i class="fa-solid fa-magnifying-glass"></i> Busca em milhões de títulos</li>
+                <li><i class="fa-solid fa-layer-group"></i> Estantes: quero ler, comprados e lidos</li>
+                <li><i class="fa-solid fa-star"></i> Avaliações e estatísticas de leitura</li>
+            </ul>
+        </div>
+
+        <div class="auth__lombadas" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+    </aside>
+
+    <main class="auth__painel">
+        <div class="auth__cartao">
+            {% block cartao %}{% endblock %}
+        </div>
+    </main>
+</div>
+{% endblock %}

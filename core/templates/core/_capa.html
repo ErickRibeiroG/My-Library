@@ -1,0 +1,10 @@
+{% load livros %}
+<div class="capa{% if grande %} capa--grande{% endif %}" style="--matiz: {{ titulo|matiz }}">
+    <div class="capa__placeholder" aria-hidden="true">
+        <span class="capa__titulo">{{ titulo|truncatewords:8 }}</span>
+        {% if autor %}<span class="capa__autor">{{ autor|truncatewords:4 }}</span>{% endif %}
+    </div>
+    {% if capa %}
+    <img src="{{ capa }}" alt="Capa de {{ titulo }}" loading="lazy" referrerpolicy="no-referrer" data-capa>
+    {% endif %}
+</div>

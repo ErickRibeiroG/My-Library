@@ -1,48 +1,56 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login as auth_login
-from django.contrib.auth.models import User
+from django.contrib import messages
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth import views as auth_views
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
 
-# Create your views here.
-def login(request):
+from account.forms import AlterarSenhaForm, CadastroForm, LoginForm, PerfilForm
 
-    if request.method == 'POST':
 
-        email = request.POST.get('email')
-        senha = request.POST.get('senha')
+class LoginView(auth_views.LoginView):
+    template_name = 'account/login.html'
+    authentication_form = LoginForm
+    redirect_authenticated_user = True
 
-        user = authenticate(request, username = email, password = senha)
 
-        if user is not None:
-            print('login')
-            auth_login(request, user)
-            return redirect('/home/')
-        
-        else:
-            erro = "Email ou senha inválidos"
-            return render(request, 'account/login.html', {'erro':erro})
-
-    return render(request, 'account/login.html')
+login = LoginView.as_view()
+sair = auth_views.LogoutView.as_view()
 
 
 def cadastro(request):
+    if request.user.is_authenticated:
+        return redirect('core:home')
 
-    if request.method == 'POST':
+    form = CadastroForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        usuario = form.save()
+        auth_login(request, usuario, backend='account.backends.EmailOuUsuarioBackend')
+        messages.success(request, f'Bem-vindo(a), {usuario.first_name}! Comece buscando um livro.')
+        return redirect('core:buscar')
 
-        primeiro_nome = request.POST.get('primeiro_nome')
-        sobrenome = request.POST.get('sobrenome')
-        email = request.POST.get('email')
-        senha = request.POST.get('senha')
+    return render(request, 'account/cadastro.html', {'form': form})
 
-        user = User.objects.create_user(
-            first_name = primeiro_nome,
-            last_name = sobrenome,
-            email = email,
-            username = email,
-            password = senha,
-        )
 
-        auth_login(request, user)
+@login_required
+def perfil(request):
+    acao = request.POST.get('acao') if request.method == 'POST' else None
 
-        return redirect('/home/')
+    form_perfil = PerfilForm(request.POST if acao == 'perfil' else None, instance=request.user)
+    form_senha = AlterarSenhaForm(request.user, request.POST if acao == 'senha' else None)
 
-    return render(request, 'account/cadastro.html')
+    if acao == 'perfil' and form_perfil.is_valid():
+        form_perfil.save()
+        messages.success(request, 'Seus dados foram atualizados.')
+        return redirect('account:perfil')
+
+    if acao == 'senha' and form_senha.is_valid():
+        usuario = form_senha.save()
+        update_session_auth_hash(request, usuario)
+        messages.success(request, 'Sua senha foi alterada.')
+        return redirect('account:perfil')
+
+    return render(request, 'account/perfil.html', {
+        'form_perfil': form_perfil,
+        'form_senha': form_senha,
+    })

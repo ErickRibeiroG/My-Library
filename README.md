@@ -1,101 +1,86 @@
-# My-Library
+# 📚 My Library
 
-Aplicação web simples em Django para gerenciar uma biblioteca pessoal: cadastrar livros, marcar como "Quero ler", "Comprado" ou "Lido", e buscar livros por APIs (ex.: Google Books). Ideal para quem quer um catálogo pessoal de leitura com uma interface web leve.
+Aplicação web em Django para organizar sua biblioteca pessoal: busque livros em milhões de títulos, organize-os em estantes (**Quero ler**, **Comprados**, **Lidos**), avalie suas leituras e acompanhe suas estatísticas.
+
+## Recursos
+
+- **Biblioteca por usuário**: cada conta tem os próprios livros, isolados das demais.
+- **Busca resiliente**: Google Books como fonte principal, com fallback automático para a Open Library quando o Google estiver indisponível ou limitando requisições. Resultados ficam em cache e a paginação é real.
+- **Estantes**: mova livros entre *Quero ler*, *Comprados* e *Lidos*. Adicionar um livro que já está na estante só muda o status, sem duplicar.
+- **Avaliação** de 1 a 5 estrelas nos livros lidos (clique de novo na mesma estrela para remover).
+- **Painel inicial** com total de livros, lidos no ano, páginas lidas, média de avaliação e progresso da estante.
+- **Minha estante**: filtro por status, busca por título/autor/categoria, ordenação e paginação.
+- **Página de detalhes** com sinopse, ficha e link para a fonte.
+- **Conta**: cadastro com validação de senha, login por e-mail ou nome de usuário, perfil editável e troca de senha.
+- **Interface** responsiva (menu lateral no celular), modo escuro automático e capas geradas quando o livro não tem imagem.
 
 ## Stack
-- **Languages:** Python, HTML, CSS
-- **Framework / runtime:** Django (ver requirements.txt)
-- **Notable libraries:** Django, requests (usada pelas integrações de busca)
 
-## Principais recursos
-- Cadastro de livros com título, autor, ano, páginas, categoria, capa (URL), tipo (quero / comprado / lido) e avaliação (1–5).
-- Busca de livros via API externa (integração presente em core/services, ex.: Google Books).
-- Páginas para visualizar livros por categoria e gerenciar status/avaliação.
-- Painel de administração do Django.
+Python 3.13 · Django 6 · requests · SQLite · HTML/CSS/JS puros (sem build).
 
-## Estrutura do repositório (top-level)
+## Estrutura
+
 ```
-manage.py               # CLI do Django
-requirements.txt        # dependências
-my_library/             # configuração do projeto (settings, wsgi, asgi, urls)
-account/                # app para contas/usuários (views, urls, templates, static)
-core/                   # app principal: modelos, views, templates, serviços (busca)
+my_library/          configurações (settings lê variáveis de ambiente / .env)
+account/             autenticação: backend por e-mail, formulários, login/cadastro/perfil
+core/                livros: modelo, views, formulários, templatetags
+  services/          integrações de busca (googlebooks.py, openlibrary.py, base.py)
+templates/           layouts e parciais compartilhados (base, app, auth)
+static/              css/app.css e js/app.js
 ```
 
-Como se encaixa: o projeto é um site Django padrão. `my_library` contém as configurações e URLs do projeto; `core` implementa o modelo Livro, as views de listagem/busca e os serviços que consultam APIs externas; `account` contém a lógica relacionada à conta/administrativo. O fluxo principal: requisição → views em `core/views.py` → operações sobre o modelo `core.models.Livro` → templates para renderização.
-
-## Requisitos
-- Python 3.10+ (ou versão compatível com as dependências em `requirements.txt`)
-- pip
-- (opcional) Credenciais de API caso a integração de busca necessite de chave (ex.: Google Books API)
-
-## Instalação rápida (exemplo)
-Execute os comandos abaixo numa máquina Unix-like; no Windows adapte os comandos de virtualenv/variáveis.
+## Como rodar
 
 ```bash
-git clone https://github.com/ErickRibeiroG/My-Library.git
-cd My-Library
-
-python -m venv venv
-source venv/bin/activate
-
+python -m venv env
+# Windows: env\Scripts\activate   |   Linux/macOS: source env/bin/activate
 pip install -r requirements.txt
 
-# Variáveis recomendadas (opcional):
-# export SECRET_KEY='sua_chave_secreta'
-# export DEBUG=False
-# export GOOGLE_BOOKS_API_KEY='sua_chave_se_for_necessaria'
-
+cp .env.example .env          # opcional: ajuste as variáveis
 python manage.py migrate
-python manage.py createsuperuser   # criar usuário admin
+python manage.py createsuperuser   # opcional, para acessar /admin/
 python manage.py runserver
 ```
 
-A aplicação ficará disponível em http://127.0.0.1:8000/.
+Acesse http://127.0.0.1:8000/ e crie sua conta.
 
-## Configuração importante
-- `my_library/settings.py` tem DEBUG=True por padrão e usa SQLite (`db.sqlite3`) — alterar para produção conforme necessário.
-- Proteja e gere um SECRET_KEY seguro em produção; não deixe chaves sensíveis no repositório.
-- Ajuste `ALLOWED_HOSTS` em produção.
-- Se usar um banco de dados diferente (Postgres, MySQL), atualize `DATABASES` em `my_library/settings.py` e instale as dependências correspondentes.
+### Variáveis de ambiente
 
-## Rotas / Endpoints úteis
-- `/` — página inicial (listagem por status)
-- `/buscar/` — busca de livros (parâmetro `q`)
-- `/livros/` — página de consulta/visualização (conforme templates)
-- `/admin/` — painel de administração do Django
+| Variável | Padrão | Descrição |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | chave de desenvolvimento | **Obrigatória** com `DJANGO_DEBUG=False` |
+| `DJANGO_DEBUG` | `True` | Modo debug |
+| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Hosts permitidos (separados por vírgula) |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | — | Origens confiáveis em produção |
+| `DJANGO_DB_PATH` | `db.sqlite3` | Caminho do banco SQLite |
+| `GOOGLE_BOOKS_API_KEY` | — | Recomendado; sem chave o Google limita as requisições |
+| `BUSCA_CACHE_SEGUNDOS` | `3600` | Tempo de cache das buscas |
+| `BUSCA_TIMEOUT_SEGUNDOS` | `6` | Timeout das chamadas às APIs |
 
-(Os nomes exatos podem ser verificados em `core/urls.py` e `my_library/urls.py`.)
+## Rotas
 
-## Execução de testes
-Se houver testes definidos:
+| Rota | Descrição |
+|---|---|
+| `/` | Login |
+| `/cadastro/` | Criar conta |
+| `/perfil/` | Dados pessoais e senha |
+| `/home/` | Painel com estatísticas e estantes |
+| `/home/livros/` | Minha estante (`?status=`, `?q=`, `?ordem=`) |
+| `/home/livros/<id>/` | Detalhes do livro |
+| `/home/buscar/` | Busca (`?q=`, `?pagina=`) |
+| `/admin/` | Administração do Django |
+
+## Testes
+
 ```bash
 python manage.py test
 ```
 
-## Como contribuir
-1. Fork e clone o repositório.
-2. Crie uma branch com a feature ou correção: `git checkout -b feat/minha-feature`.
-3. Faça commits pequenos e claros.
-4. Abra um Pull Request descrevendo a mudança e como testá-la.
+Os testes cobrem modelo, isolamento entre usuários, views, autenticação e os serviços de busca (com as APIs simuladas, sem acesso à rede).
 
-Sugestões de melhorias que podem ser bem-vindas:
-- Autenticação social (OAuth) para salvar bibliotecas por usuário.
-- Paginação e filtros de busca avançados.
-- Internacionalização (i18n) da interface.
-- Testes automáticos para serviços (ex.: `core/services/googlebooks.py`).
+## Produção (checklist)
 
-## Observações de segurança e privacidade
-- Não comitar chaves de API nem o SECRET_KEY.
-- Se for publicar dados de usuários, assegure conformidade com regras de privacidade aplicáveis.
-
-## Licença
-Adicione uma licença apropriada (ex.: MIT, Apache-2.0) criando um arquivo `LICENSE` no repositório.
-
----
-
-Try asking:
-- "Quer que eu adicione suporte a login por redes sociais (OAuth) e persistência por usuário?"
-- "Deseja que eu escreva testes unitários para os serviços em core/services (ex.: googlebooks.py) e para as views?"
-- "Quer que eu mova as configurações sensíveis para variáveis de ambiente e forneça um exemplo .env e instruções para docker-compose?"
-```
+- Defina `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=False`, `DJANGO_ALLOWED_HOSTS` e `DJANGO_CSRF_TRUSTED_ORIGINS`.
+- Rode `python manage.py collectstatic` e sirva `staticfiles/` (ex.: WhiteNoise ou o servidor web).
+- Use um servidor WSGI (gunicorn / waitress) e, se possível, PostgreSQL.
+- Para mais de um processo, troque o cache em memória (`CACHES`) por Redis ou banco.

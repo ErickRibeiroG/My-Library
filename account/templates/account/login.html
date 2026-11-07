@@ -1,54 +1,25 @@
-{% load static %}
+{% extends 'layouts/auth.html' %}
 
-<!DOCTYPE html>
-<html lang="en">
+{% block title %}Entrar{% endblock %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{% static 'account/css/login.css' %}">
+{% block cartao %}
+<h2 class="auth__titulo">Bem-vindo(a) de volta</h2>
+<p class="auth__subtitulo">Entre para acessar sua biblioteca.</p>
 
-    <!-- Fonte -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Wix+Madefor+Text:ital,wght@0,400..800;1,400..800&display=swap"
-        rel="stylesheet">
+{% if form.non_field_errors %}
+<div class="alerta alerta--erro">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <span>{% for erro in form.non_field_errors %}{{ erro }}{% endfor %}</span>
+</div>
+{% endif %}
 
-    <title>Document</title>
-</head>
+<form method="post" class="formulario" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    {% include 'partials/campo.html' with campo=form.username icone='fa-envelope' %}
+    {% include 'partials/campo.html' with campo=form.password icone='fa-lock' %}
+    <button type="submit" class="botao botao--primario botao--bloco">Entrar</button>
+</form>
 
-<body>
-
-    <section class="login">
-
-        <div class="esquerda">
-            
-        </div>
-
-        <div class="direita">
-
-            <form class="formulario-login" action="#" method="post">
-                {% csrf_token %}
-
-                <h2>Login</h2>
-
-                <input type="email" name="email" placeholder="E-mail" />
-                <input type="password" name="senha" placeholder="Senha" />
-                <input type="submit" value="Entrar" />
-
-                <div class="opc-cadastro">
-                    <p>Não possui cadastro? </p>
-                    <a href="{% url 'account:cadastro' %}" title="Cadastro">Cadastre-se</a>
-                </div>
-                
-
-            </form>
-
-        </div>
-
-    </section>
-
-</body>
-
-</html>
+<p class="auth__rodape">Não tem conta? <a href="{% url 'account:cadastro' %}">Cadastre-se</a></p>
+{% endblock %}

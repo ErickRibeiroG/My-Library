@@ -1,0 +1,51 @@
+{% extends 'layouts/app.html' %}
+{% load livros %}
+
+{% block title %}Meu perfil{% endblock %}
+
+{% block topo %}
+<p class="topo__sobretitulo">Conta</p>
+<h1 class="topo__titulo">Meu perfil</h1>
+{% endblock %}
+
+{% block content %}
+<div class="perfil-pagina">
+    <section class="painel perfil-pagina__cabecalho">
+        <span class="avatar avatar--grande">{{ user|iniciais }}</span>
+        <div>
+            <h2>{{ user.get_full_name|default:user.get_username }}</h2>
+            <p>{{ user.email }} · membro desde {{ user.date_joined|date:"F \d\e Y" }}</p>
+        </div>
+    </section>
+
+    <section class="painel">
+        <h2 class="painel__titulo"><i class="fa-solid fa-id-card"></i> Dados pessoais</h2>
+        <form method="post" class="formulario" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="acao" value="perfil">
+            <div class="formulario__linha">
+                {% include 'partials/campo.html' with campo=form_perfil.first_name %}
+                {% include 'partials/campo.html' with campo=form_perfil.last_name %}
+            </div>
+            {% include 'partials/campo.html' with campo=form_perfil.email icone='fa-envelope' %}
+            <div class="formulario__acoes">
+                <button type="submit" class="botao botao--primario">Salvar alterações</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="painel">
+        <h2 class="painel__titulo"><i class="fa-solid fa-key"></i> Alterar senha</h2>
+        <form method="post" class="formulario" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="acao" value="senha">
+            {% include 'partials/campo.html' with campo=form_senha.old_password icone='fa-lock' %}
+            {% include 'partials/campo.html' with campo=form_senha.new_password1 icone='fa-lock' %}
+            {% include 'partials/campo.html' with campo=form_senha.new_password2 icone='fa-lock' %}
+            <div class="formulario__acoes">
+                <button type="submit" class="botao botao--primario">Alterar senha</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

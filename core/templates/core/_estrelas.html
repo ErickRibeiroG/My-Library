@@ -1,0 +1,15 @@
+{# Avaliação de 1 a 5. Clicar na estrela já selecionada remove a avaliação. #}
+<form method="post" action="{% url 'core:avaliar' livro.pk %}" class="estrelas{% if grande %} estrelas--grande{% endif %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <div class="estrelas__botoes" role="group" aria-label="Avaliação: {{ livro.avaliacao|default:'sem' }} de 5">
+        {% for _ in "12345" %}{% with nota=forloop.counter %}
+        <button type="submit" name="avaliacao"
+            value="{% if livro.avaliacao == nota %}0{% else %}{{ nota }}{% endif %}"
+            class="estrela{% if livro.avaliacao and nota <= livro.avaliacao %} cheia{% endif %}"
+            title="{% if livro.avaliacao == nota %}Remover avaliação{% else %}{{ nota }} estrela{{ nota|pluralize }}{% endif %}">
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+        </button>
+        {% endwith %}{% endfor %}
+    </div>
+</form>

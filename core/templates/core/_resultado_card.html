@@ -1,0 +1,45 @@
+{% load livros %}
+<article class="card-livro{% if status_atual %} card-livro--na-estante{% endif %}">
+    <div class="card-livro__capa">
+        {% include 'core/_capa.html' with titulo=livro.titulo autor=livro.autor capa=livro.capa %}
+        {% if status_atual %}
+        <span class="chip chip--{{ status_atual }}"><i class="fa-solid fa-check"></i>{{ status_atual|rotulo_status }}</span>
+        {% endif %}
+    </div>
+
+    <div class="card-livro__corpo">
+        {% if livro.categoria %}<p class="card-livro__categoria">{{ livro.categoria }}</p>{% endif %}
+        <h3 class="card-livro__titulo" title="{{ livro.titulo }}">{{ livro.titulo }}</h3>
+        <p class="card-livro__autor">{{ livro.autor|default:"Autor desconhecido" }}</p>
+        <p class="card-livro__meta">
+            {% if livro.ano %}<span>{{ livro.ano }}</span>{% endif %}
+            {% if livro.paginas %}<span>{{ livro.paginas }} pág.</span>{% endif %}
+        </p>
+
+        <form method="post" action="{% url 'core:adicionar' %}" class="card-livro__rodape">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <input type="hidden" name="externo_id" value="{{ livro.externo_id }}">
+            <input type="hidden" name="titulo" value="{{ livro.titulo }}">
+            <input type="hidden" name="autor" value="{{ livro.autor }}">
+            <input type="hidden" name="ano" value="{{ livro.ano }}">
+            <input type="hidden" name="paginas" value="{{ livro.paginas|default_if_none:'' }}">
+            <input type="hidden" name="categoria" value="{{ livro.categoria }}">
+            <input type="hidden" name="capa" value="{{ livro.capa }}">
+            <input type="hidden" name="descricao" value="{{ livro.descricao }}">
+
+            <p class="card-livro__rotulo-acoes">{% if status_atual %}Mover para{% else %}Adicionar em{% endif %}</p>
+            <div class="card-livro__acoes card-livro__acoes--rotulos">
+                {% status_disponiveis as lista_status %}
+                {% for valor, rotulo, icone in lista_status %}
+                <button type="submit" name="tipo" value="{{ valor }}"
+                    class="botao-acao botao-acao--{{ valor }}{% if status_atual == valor %} ativo{% endif %}"
+                    title="{{ rotulo }}" aria-label="{% if status_atual %}Mover para{% else %}Adicionar em{% endif %} {{ rotulo }}"
+                    {% if status_atual == valor %}aria-pressed="true"{% endif %}>
+                    <i class="{{ icone }}"></i>
+                </button>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+</article>
